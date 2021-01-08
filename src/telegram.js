@@ -7,10 +7,10 @@ require('moment/locale/en-gb');
 const config = require('../config');
 const { interlocutor } = require('./state');
 
-const { MAX_FRIENDS, VK_VERSION, LOCALE } = config;
+const { MAX_FRIENDS, VK_VERSION, VK_TARGET_USER } = config;
 
 module.exports = (app, vk, tgUtils, vkUtils) => {
-  // these functions are in ./utils/tg-utils.js
+// these functions are in ./utils/tg-utils.js
   const {
     errorHandler,
     onlySettedUser,
@@ -137,33 +137,6 @@ module.exports = (app, vk, tgUtils, vkUtils) => {
   });
 
   app.on('text', onlySettedUser, async (ctx) => {
-    const matchResult = ctx.update.message.text.match(/^\/[0-9]+/);
-    if (matchResult) {
-      const id = matchResult[0].slice(1);
-
-      vk.api.users.get({
-        user_ids: id,
-        fields: 'last_seen,online',
-        v: VK_VERSION,
-      }).then(([user]) => {
-        interlocutor.name = `👤${user.first_name} ${user.last_name}👤`;
-        ctx.reply(`❗️User set to ${user.first_name} ${user.last_name} (/${user.id})❗️`, Markup
-          .keyboard(config.keyboard.concat([[interlocutor.name]]))
-          .oneTime()
-          .resize()
-          .extra());
-        interlocutor.vkId = user.id;
-      }).catch((error) => {
-        console.error(error);
-        ctx.reply('Error. Maybe this user does not exist!');
-      });
-      return true;
-    }
-    if (!interlocutor.vkId) return ctx.reply(LOCALE.userNotSetted);
-    if (ctx.update.message.text === interlocutor.name) {
-      return ctx.reply(LOCALE.clickOnUserInfoButton);
-    }
-
     let msg = null;
     let attachment = null;
 
@@ -188,7 +161,7 @@ module.exports = (app, vk, tgUtils, vkUtils) => {
     }
 
     vk.api.messages.send({
-      user_id: interlocutor.vkId,
+      user_id: VK_TARGET_USER,
       message: msg,
       v: VK_VERSION,
       attachment,
@@ -224,7 +197,7 @@ module.exports = (app, vk, tgUtils, vkUtils) => {
       const uploadedDocument = await uploadDocumentToVk(ctx.message.document);
 
       await vk.api.messages.send({
-        user_id: interlocutor.vkId,
+        user_id: VK_TARGET_USER,
         attachment: uploadedDocument.toString(),
         v: VK_VERSION,
       });
@@ -238,7 +211,7 @@ module.exports = (app, vk, tgUtils, vkUtils) => {
       const link = await app.telegram.getFileLink(ctx.message.voice);
       const uploadedFile = await vk.upload.voice({
         source: link,
-        peer_id: interlocutor.vkId,
+        peer_id: VK_TARGET_USER,
       });
       await vk.api.messages.send({
         user_id: interlocutor.vkId,

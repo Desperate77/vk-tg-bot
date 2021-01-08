@@ -6,5 +6,6 @@ module.exports = {
   ...configJSON,
   vk_token: process.env.VK_TOKEN || configJSON.vk_token,
   tg_token: process.env.TG_TOKEN || configJSON.tg_token,
+  VK_TARGET_USER: process.env.VK_TARGET_USER || configJSON.VK_TARGET_USER,
   tg_user: parseInt(process.env.TG_USER, 10) || configJSON.tg_user,
 };

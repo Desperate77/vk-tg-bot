@@ -1,6 +1,6 @@
 const config = require('../config');
 
-const { VK_VERSION } = config;
+const { VK_VERSION, VK_TARGET_USER } = config;
 
 module.exports = ({ telegram }, vk, tgUtils, vkUtils) => {
   // these functions are in ./utils/vk-utils.js
@@ -22,8 +22,14 @@ module.exports = ({ telegram }, vk, tgUtils, vkUtils) => {
       await ctx.loadMessagePayload();
 
       // get info about user that send the message
+      const id = ctx.getFrom().id;
+
+      if (VK_TARGET_USER !== id) {
+        return false;
+      }
+
       const [user] = await vk.api.users.get({
-        user_ids: ctx.getFrom().id,
+        user_ids: id,
         v: VK_VERSION,
       });
 
